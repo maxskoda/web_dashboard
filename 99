@@ -1,0 +1,9 @@
+Collecting chromedriver-binary
+  Downloading chromedriver-binary-101.0.4951.15.0.tar.gz (4.9 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Using legacy 'setup.py install' for chromedriver-binary, since package 'wheel' is not installed.
+Installing collected packages: chromedriver-binary
+  Running setup.py install for chromedriver-binary: started
+  Running setup.py install for chromedriver-binary: finished with status 'done'
+Successfully installed chromedriver-binary-101.0.4951.15.0
