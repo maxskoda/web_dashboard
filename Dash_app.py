@@ -109,61 +109,6 @@ def f(script):
 
 
 xd, yd, ed = np.loadtxt('text.csv', delimiter=' ', usecols=(0, 1, 2), unpack=True)
-# fig = go.Figure(data=[go.Scatter(x=xd, y=yd, error_y=dict(
-#         type='data',
-#         array=ed,
-#         visible=True))])
-
-
-#
-# ReflectometryISISLoadAndProcess(InputRunList='65272', ThetaIn=0.8,
-#                                 AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='70-90',
-#                                 WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-#                                 MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18, MonitorIntegrationWavelengthMin=4,
-#                                 MonitorIntegrationWavelengthMax=10,
-#                                 FirstTransmissionRunList='65274', SecondTransmissionRunList='65275',
-#                                 StartOverlap=10, EndOverlap=12, ScaleRHSWorkspace=False,
-#                                 TransmissionProcessingInstructions='70-90',
-#                                 MomentumTransferMin=0.010321317306126728,
-#                                 MomentumTransferStep=0.055433662337842131,
-#                                 MomentumTransferMax=0.1168874036214391,
-#                                 OutputWorkspaceBinned='IvsQ_binned_65272',
-#                                 OutputWorkspace='IvsQ_65272',
-#                                 OutputWorkspaceTransmission='TRANS_LAM_65274_65275')
-#
-# ReflectometryISISLoadAndProcess(InputRunList='65273', ThetaIn=2.3, AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='67-95', WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2, MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18, MonitorIntegrationWavelengthMin=4, MonitorIntegrationWavelengthMax=10, FirstTransmissionRunList='65276', SecondTransmissionRunList='65277', StartOverlap=10, EndOverlap=12, ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90', MomentumTransferMin=0.029666234509808882, MomentumTransferStep=0.055446760622640492, MomentumTransferMax=0.33612056568876092, OutputWorkspaceBinned='IvsQ_binned_65273', OutputWorkspace='IvsQ_65273', OutputWorkspaceTransmission='TRANS_LAM_65276_65277')
-# Stitch1DMany(InputWorkspaces='IvsQ_65272,IvsQ_65273', OutputWorkspace='IvsQ_65272_65273', Params='-0.055434', OutScaleFactors='0.841361')
-#
-
-# ReflectometryISISLoadAndProcess(InputRunList=wksp, ThetaIn=2.3,
-#                                 AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='70-90',
-#                                 WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-#                                 MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18,
-#                                 MonitorIntegrationWavelengthMin=4, MonitorIntegrationWavelengthMax=10,
-#                                 StartOverlap=10, EndOverlap=12,
-#                                 MomentumTransferMin=0.0064510027925337703,
-#                                 MomentumTransferStep=0.029555884192578895, MomentumTransferMax=0.073099540677375993,
-#                                 OutputWorkspaceBinned='IvsQ_binned_62098', OutputWorkspace='IvsQ_62098')
-
-# Generate figure
-# xd = mtd['IvsQ_65272_65273'].dataX(0)
-# yd = mtd['IvsQ_65272_65273'].dataY(0)
-
-# xd = mtd['0_IvsQ_binned'].dataX(0)
-# yd = mtd['0_IvsQ_binned'].dataY(0)
-
-# fig = go.Figure(data=[go.Scatter(x=xd, y=yd, error_y=dict(
-#             type='data',
-#             array=ed,
-#             visible=True))])
-# fig.update_yaxes(type="log")
-# fig.update_xaxes(type="log")
-#
-#
-# fig.update_layout(
-#     margin=dict(l=20, r=20, t=20, b=20),
-#     paper_bgcolor="LightSteelBlue",
-# )
 
 
 colors = {
@@ -172,23 +117,10 @@ colors = {
 }
 
 
-ISISJournalGetExperimentRuns(Cycle='22_1', InvestigationId=values['rbno'].strip(), OutputWorkspace='RB'+values['rbno'].strip())
-runs = mtd['RB'+values['rbno'].strip()]
-
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.CYBORG]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-# Live data figure
-# @app.callback(Output('reflectivity-graph', 'figure'),
-#               Input('interval-component', 'n_intervals'))
-
-
-def drawFigure():
-    return html.Div([
-        dcc.Graph(id='reflectivity-graph', figure=fig)
-        # dbc.Card(dbc.CardBody([dcc.Graph(id='reflectivity-graph', figure=fig)]))
-    ])
 
 
 colors = {
@@ -198,16 +130,20 @@ colors = {
 
 degree_sign = u'\N{DEGREE SIGN}'
 
+
 def create_card(title, content, color):
     card_content = content.split("|")
 
-    cb = [html.H4(title, className="card-header"), html.Br()]
+    cb = []
     for c in card_content:
-        cb.append(html.H3(c, className="card-text"))
+        cb.append(html.H4(c, className="card-text"))
         cb.append(html.Br())
     card = dbc.Card(
-        dbc.CardBody(cb),
-        color=color, inverse=False
+        [
+            dbc.CardHeader(title),
+            dbc.CardBody(cb),
+        ],
+        color=color, inverse=False,
     )
     return card
 
@@ -215,8 +151,8 @@ def create_card(title, content, color):
 # Trans number input:
 trans1_input = html.Div(
     [
-        dbc.Label("Trans 1",  style={'font-size':'20px'}),
-        dbc.Input(id="input1", placeholder="Transmission run number.", type="number", style={'font-size':'20px'}),
+        dbc.Label("Trans 1",  style={'font-size': '15px'}),
+        dbc.Input(id="input1", placeholder="Transmission run number.", type="number", style={'font-size': '15px'}),
         html.Br(),
         # html.P(id="output1"),
     ]
@@ -230,8 +166,8 @@ def output_trans1(value):
 
 trans2_input = html.Div(
     [
-        dbc.Label("Trans 2",  style={'font-size':'20px'}),
-        dbc.Input(id="input2", placeholder="Transmission run number.", type="number",  style={'font-size':'20px'}),
+        dbc.Label("Trans 2",  style={'font-size': '15px'}),
+        dbc.Input(id="input2", placeholder="Transmission run number.", type="number",  style={'font-size': '15px'}),
         html.Br(),
         # html.P(id="output2"),
     ]
@@ -245,7 +181,7 @@ def output_trans2(value):
 
 def create_table(title, rows):
     table_head = [
-            html.Thead(html.Tr(html.Th(html.H4(title), colSpan=str(len(rows[0])))))
+            html.Thead(html.Tr(html.Th(html.H4(html.B(title)), colSpan=str(len(rows[0])))))
         ]
 
     table_rows = []
@@ -260,6 +196,8 @@ def create_table(title, rows):
                              hover=True,
                              responsive=True,
                              striped=True,
+                             style={'padding-right': '10px', 'padding-left': '100px'},
+                             color="light",
                              )
     return sample_table
 
@@ -320,17 +258,56 @@ def row1(n):
                         style={'padding': 10})
     return graphRow1
 
+
 xd, yd, ed = np.loadtxt('text.csv', delimiter=' ', usecols=(0, 1, 2), unpack=True)
 fig = go.Figure(data=[go.Scatter(x=xd, y=yd, error_y=dict(
             type='data',
             array=ed,
             visible=True))])
 
+
+def reduce(run, trans1=None, trans2=None):
+    if trans1 is not None and trans2 is not None:
+        ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
+                                        WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
+                                        MonitorBackgroundWavelengthMin=17,
+                                        MonitorBackgroundWavelengthMax=18,
+                                        MonitorIntegrationWavelengthMin=4,
+                                        MonitorIntegrationWavelengthMax=10,
+                                        FirstTransmissionRunList=str(trans1),
+                                        SecondTransmissionRunList=str(trans2),
+                                        StartOverlap=10, EndOverlap=12,
+                                        ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
+                                        ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
+    elif trans1 is not None and trans2 is None:
+        ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
+                                        WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
+                                        MonitorBackgroundWavelengthMin=17,
+                                        MonitorBackgroundWavelengthMax=18,
+                                        MonitorIntegrationWavelengthMin=4,
+                                        MonitorIntegrationWavelengthMax=10,
+                                        FirstTransmissionRunList=str(trans1),
+                                        StartOverlap=10, EndOverlap=12,
+                                        ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
+                                        ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
+    else:
+        ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
+                                        WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
+                                        MonitorBackgroundWavelengthMin=17,
+                                        MonitorBackgroundWavelengthMax=18,
+                                        MonitorIntegrationWavelengthMin=4,
+                                        MonitorIntegrationWavelengthMax=10,
+                                        ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
+
+
 @app.callback(Output('graph_row', 'children'),
-              Input('pandas-dropdown-2', 'value'),
+              [Input('input1', 'value'), Input('input2', 'value')],
+              Input('runlist-dropdown', 'value'),
               Input('interval-component', 'n_intervals'))
-def graph_row(value, n):
+def graph_row(trans1_value, trans2_value, value, n):
     global fig
+    print("TRANSMISSIONS: ", trans1_value, trans2_value)
+    print("Runs: ", value)
     # Get live data from file
     xd, yd, ed = np.loadtxt('text.csv', delimiter=' ', usecols=(0, 1, 2), unpack=True)
     # 1. delete all traces
@@ -347,9 +324,25 @@ def graph_row(value, n):
     # 3. Reduce and plot all other selected runs
     try:
         for run in value:
-            if 'IvsQ_binned_'+str(run) not in mtd.getObjectNames():
-                ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
-                                        ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_'+str(run))
+            reduce(run, trans1_value, trans2_value)
+            print("WHY?")
+            # if trans1_value != '':
+            #     ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
+            #                                     WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
+            #                                     MonitorBackgroundWavelengthMin=17,
+            #                                     MonitorBackgroundWavelengthMax=18,
+            #                                     MonitorIntegrationWavelengthMin=4,
+            #                                     MonitorIntegrationWavelengthMax=10,
+            #                                     FirstTransmissionRunList='66221',
+            #                                     SecondTransmissionRunList='66222',
+            #                                     StartOverlap=10, EndOverlap=12,
+            #                                     ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
+            #                         ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_'+str(run))
+            # else:
+            #     ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
+            #                                     FirstTransmissionWorkspace=str(trans1_value),
+            #                                     ProcessingInstructions='70-90',
+            #                                     OutputWorkspaceBinned='IvsQ_binned_' + str(run))
             xd = mtd['IvsQ_binned_' + str(run)].dataX(0)
             yd = mtd['IvsQ_binned_' + str(run)].dataY(0)
             ed = mtd['IvsQ_binned_' + str(run)].dataE(0)
@@ -372,94 +365,60 @@ def graph_row(value, n):
     )
     fig.update_yaxes(nticks=6)
 
-    graphRow2 = dbc.Row([dbc.Col(trans1_input, md=1), dbc.Col(trans2_input, md=1),
-             dbc.Col(dcc.Graph(id='reflectivity-graph', figure=fig), md=6, width={"offset": 1})],
-                         # dbc.Col(id='wksp_dropdown', children=[wksp_dropdown], md=2)],
-              # dbc.Col(dcc.Dropdown(id="runlist-drowpdown", options=[item for item in runs.column(1)], multi=True), md=2)],
-             style={'padding': 10})
     gr = dcc.Graph(id='reflectivity-graph', figure=fig)
-    return gr #graphRow2
+    return gr
 
-# dbc.Col(id='wksp_dropdown', children=[wksp_dropdown], md=2)],
-
-# wksp_dropdown = dbc.DropdownMenu(
-#     label="Menu",
-#     children=[
-#         dbc.DropdownMenuItem(item) for item in runs.column(1)
-#     ],
-#     color="secondary"
-# )
-wksp_dropdown = dcc.Dropdown(id="runlist-drowpdown", options=[item for item in runs.column(1)], multi=True)
-
-
-# graphRow2 = dbc.Row([dbc.Col(trans1_input, md=1), dbc.Col(trans2_input, md=1),
-#                      dbc.Col(dcc.Graph(id='reflectivity-graph', figure=fig), md=6, width={"offset": 1}),
-#                      dbc.Col(id='wksp_dropdown', children=[wksp_dropdown], md=2)], style={'padding': 10})
-# #################
-# graphRow2 = dbc.Row([dbc.Col(trans1_input, md=1), dbc.Col(trans2_input, md=1),
-#                      dbc.Col(dcc.Graph(id='reflectivity-graph', figure=fig), md=6, width={"offset": 1}),
-#                      dbc.Col(
-#                          dcc.Dropdown(id="runlist-drowpdown", options=[item for item in runs.column(1)], multi=True), md=2)],
-#                     style={'padding': 10})
 
 app.layout = html.Div([html.Div(id='row0'),
                        html.Div(id='row1'),
                        # html.Div(id='graph_row', children=[]),#graphRow2,
-                       dbc.Row([dbc.Col(id="trans_col", children=[dbc.Row(trans1_input), dbc.Row(trans2_input)], md=1),
+                       dbc.Row([dbc.Col(id="trans_col", children=[dbc.Row(trans1_input), dbc.Row(trans2_input)], md=1,
+                                        width={"offset": 1}),
                                 # dbc.Col(trans2_input, md=1),
-                                dbc.Col(html.Div(id='graph_row'), md=7, width={"offset": 1}),
-                                dbc.Col(dcc.Dropdown([item for item in runs.column(1)], id='pandas-dropdown-2',
-                                                     multi=True,  style={'font-size':'20px'}), md=2)],
-                                style={'padding': 10}),
-                       # html.Div(id='pandas-output-container-2'),
+                                dbc.Col(html.Div(id='graph_row'), md=7, width={"offset": 0}),
+                                dbc.Col(dcc.Dropdown(id='runlist-dropdown', placeholder="Select runs",
+                                                     multi=True,  style={'font-size': '15px'}), md=2),
+                                # dbc.Col(dbc.Button(id="refresh-button", color="info", className="me-1"))
+                                ], style={'padding': 10}),
+
                        dcc.Interval(
                             id='interval-component',
                             interval=5*1000, # in milliseconds
                             n_intervals=0
-                      )]
+                      ),
+                       dcc.Interval(
+                           id='interval-component-2',
+                           interval=60 * 1000,  # in milliseconds
+                           n_intervals=0
+                       )
+                       ]
                       )
 
 
-# @app.callback(
-#     Output('reflectivity-graph', 'figure'),
-#     # Output('pandas-output-container-2', 'children'),
-#     Input('pandas-dropdown-2', 'value')
-# )
-def update_output(value):
-    print("Processing: ", value)
+def get_runs(cycle):
+    ISISJournalGetExperimentRuns(Cycle=cycle, InvestigationId=str(values['rbno'].strip()), OutputWorkspace='RB' + str(values['rbno'].strip()))
+    runs = mtd['RB' + str(values['rbno'].strip())]
+    opt = [item for item in runs.column(1)]
+    return opt
 
-    ReflectometryISISLoadAndProcess(InputRunList=str(value), AnalysisMode='MultiDetectorAnalysis',
-                                    ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_'+str(value))
-    # xd, yd, ed = np.loadtxt('text.csv', delimiter=' ', usecols=(0, 1, 2), unpack=True)
+opt = get_runs('22_1')
 
-    # fig = go.Figure(data=[go.Scatter(x=xd, y=yd, error_y=dict(
-    #     type='data',
-    #     array=ed,
-    #     visible=True))])
-    # fig.update_yaxes(type="log", tickfont_size=18)
-    # fig.update_xaxes(type="log", tickfont_size=18)
-    #
-    # fig.update_layout(
-    #     yaxis_tickformat='.0e',
-    #     uirevision="Don't change",
-    #     margin=dict(l=20, r=20, t=20, b=20),
-    #     paper_bgcolor="LightSteelBlue",
-    # )
-    # fig.update_yaxes(nticks=6)
+@app.callback(
+    [Output("runlist-dropdown", "options"), Output("runlist-dropdown", "value")],
+    [Input("interval-component-2", "n_intervals")],
+    [State("runlist-dropdown", "value")]
+)
+def make_dropdown_options(n, value):
+    opt = get_runs('22_1')
+    options = [{"label": v, "value": v} for v in opt]
 
-    xd = mtd['IvsQ_binned_'+str(value)].dataX(0)
-    yd = mtd['IvsQ_binned_'+str(value)].dataY(0)
-    ed = mtd['IvsQ_binned_'+str(value)].dataE(0)
-
-    fig.add_trace(go.Scatter(x=xd, y=yd, error_y=dict(
-        type='data',
-        array=ed,
-        visible=True)))
-    # fig.add_trace(go.Scatter(x=xd, y=yd))
-
-    return fig #f'You have selected {value}'
-
-
+    # if value not in [o["value"] for o in options]:
+    #     # if the value is not in the new options list, we choose a different value
+    #     if options:
+    #         value = options[0]["value"]
+    #     else:
+    #         value = None
+    return options, value
 
 
 if __name__ == '__main__':

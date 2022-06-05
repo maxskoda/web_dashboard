@@ -33,6 +33,7 @@ def get_values(session, str1=None, str2=None,):
         m = re.search('(?<=Run Status:).*(?=:)', inst_pvs)
         # print(int(m.group(0)))
         values['run_status'] = m.group(0)
+        values['run_status'] = m.group(0)
 
         m = re.search('(?<=Run Number:).*(?=:)', inst_pvs)
         # print(int(m.group(0)))
