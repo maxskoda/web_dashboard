@@ -6,7 +6,7 @@ import numpy as np
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import dash
-from dash import html
+from dash import html, callback_context
 from dash import dcc
 import plotly.express as px
 import pandas as pd
@@ -40,6 +40,7 @@ dq_q = 0.03
 TRANS_ROI = '70-90'
 ROI = '70-90'
 
+
 ReflectometryISISLoadAndProcess(InputRunList='65272', ThetaIn=0.8,
                                 AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='70-90',
                                 WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
@@ -56,6 +57,7 @@ ReflectometryISISLoadAndProcess(InputRunList='65272', ThetaIn=0.8,
                                 OutputWorkspaceTransmission='TRANS_SM')
 
 ReflectometryISISLoadAndProcess(InputRunList='65273', ThetaIn=2.3, AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='67-95', WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2, MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18, MonitorIntegrationWavelengthMin=4, MonitorIntegrationWavelengthMax=10, FirstTransmissionRunList='65276', SecondTransmissionRunList='65277', StartOverlap=10, EndOverlap=12, ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90', MomentumTransferMin=0.029666234509808882, MomentumTransferStep=0.055446760622640492, MomentumTransferMax=0.33612056568876092, OutputWorkspaceBinned='IvsQ_binned_65273', OutputWorkspace='IvsQ_65273', OutputWorkspaceTransmission='TRANS')
+
 # Stitch1DMany(InputWorkspaces='IvsQ_65272,IvsQ_65273', OutputWorkspace='IvsQ_65272_65273', Params='-0.055434', OutScaleFactors='0.841361')
 
 
@@ -152,7 +154,7 @@ def create_card(title, content, color):
 trans1_input = html.Div(
     [
         dbc.Label("Trans 1",  style={'font-size': '15px'}),
-        dbc.Input(id="input1", placeholder="Transmission run number.", type="number", style={'font-size': '15px'}),
+        dbc.Input(id="input1", placeholder="Transmission run number.", type="number", debounce=True, style={'font-size': '15px'}),
         html.Br(),
         # html.P(id="output1"),
     ]
@@ -167,7 +169,7 @@ def output_trans1(value):
 trans2_input = html.Div(
     [
         dbc.Label("Trans 2",  style={'font-size': '15px'}),
-        dbc.Input(id="input2", placeholder="Transmission run number.", type="number",  style={'font-size': '15px'}),
+        dbc.Input(id="input2", placeholder="Transmission run number.", type="number", debounce=True, style={'font-size': '15px'}),
         html.Br(),
         # html.P(id="output2"),
     ]
@@ -300,11 +302,13 @@ def reduce(run, trans1=None, trans2=None):
                                         ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
 
 
-@app.callback(Output('graph_row', 'children'),
-              [Input('input1', 'value'), Input('input2', 'value')],
-              Input('runlist-dropdown', 'value'),
-              Input('interval-component', 'n_intervals'))
-def graph_row(trans1_value, trans2_value, value, n):
+@app.callback(
+        Output('graph_row', 'children'),
+        [Input('input1', 'value'), Input('input2', 'value')],
+        Input('runlist-dropdown', 'value'),
+        Input('interval-component', 'n_intervals'),
+              )
+def graph_row(trans1_value, trans2_value, value, n_int):
     global fig
     print("TRANSMISSIONS: ", trans1_value, trans2_value)
     print("Runs: ", value)
@@ -325,24 +329,7 @@ def graph_row(trans1_value, trans2_value, value, n):
     try:
         for run in value:
             reduce(run, trans1_value, trans2_value)
-            print("WHY?")
-            # if trans1_value != '':
-            #     ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
-            #                                     WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-            #                                     MonitorBackgroundWavelengthMin=17,
-            #                                     MonitorBackgroundWavelengthMax=18,
-            #                                     MonitorIntegrationWavelengthMin=4,
-            #                                     MonitorIntegrationWavelengthMax=10,
-            #                                     FirstTransmissionRunList='66221',
-            #                                     SecondTransmissionRunList='66222',
-            #                                     StartOverlap=10, EndOverlap=12,
-            #                                     ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
-            #                         ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_'+str(run))
-            # else:
-            #     ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
-            #                                     FirstTransmissionWorkspace=str(trans1_value),
-            #                                     ProcessingInstructions='70-90',
-            #                                     OutputWorkspaceBinned='IvsQ_binned_' + str(run))
+
             xd = mtd['IvsQ_binned_' + str(run)].dataX(0)
             yd = mtd['IvsQ_binned_' + str(run)].dataY(0)
             ed = mtd['IvsQ_binned_' + str(run)].dataE(0)
@@ -368,18 +355,47 @@ def graph_row(trans1_value, trans2_value, value, n):
     gr = dcc.Graph(id='reflectivity-graph', figure=fig)
     return gr
 
+# @app.callback(
+#     Output("interval-component", "disabled"),
+#     [Input("reduce-button", "n_clicks")],
+#     [State("interval-component", "disabled")],
+# )
+# def toggle_interval(n, disabled):
+#     if n:
+#         return not disabled
+#     return disabled
+
+
+@app.callback(
+    Output('interval-component', 'disabled'),
+    Input('reduce-button', 'n_clicks'),
+    State('runlist-dropdown', 'options'),
+    [State('input1', 'value'), State('input2', 'value')]
+)
+def reduce_all(n_clicks, opts, trans1_value, trans2_value):
+    # Reduce all  runs
+    try:
+        for run in opts[0]:
+            reduce(run['value'], trans1_value, trans2_value)
+        print(run['value'], " reduced!")
+    except TypeError:
+        print('No runs selected.')
+    return False
+
 
 app.layout = html.Div([html.Div(id='row0'),
                        html.Div(id='row1'),
-                       # html.Div(id='graph_row', children=[]),#graphRow2,
                        dbc.Row([dbc.Col(id="trans_col", children=[dbc.Row(trans1_input), dbc.Row(trans2_input)], md=1,
                                         width={"offset": 1}),
                                 # dbc.Col(trans2_input, md=1),
                                 dbc.Col(html.Div(id='graph_row'), md=7, width={"offset": 0}),
                                 dbc.Col(dcc.Dropdown(id='runlist-dropdown', placeholder="Select runs",
                                                      multi=True,  style={'font-size': '15px'}), md=2),
+                                dbc.Col(dbc.Button("Reduce all", color="dark", className="me-1", id="reduce-button"), md=1),
                                 # dbc.Col(dbc.Button(id="refresh-button", color="info", className="me-1"))
                                 ], style={'padding': 10}),
+
+                       html.Div(id='hidden-div', style={'display': 'none'}),
 
                        dcc.Interval(
                             id='interval-component',
