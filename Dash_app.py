@@ -151,25 +151,22 @@ def create_card(title, content, color):
 
 
 # Trans number input:
-trans1_input = html.Div(
+trans1_input = dbc.Row(
     [
-        dbc.Label("Trans 1",  style={'font-size': '15px'}),
-        dbc.Input(id="input1", placeholder="Transmission run number.", type="number", debounce=True, style={'font-size': '15px'}),
+        # dbc.Col(dbc.Label("Trans 1", className="ml-2", style={'font-size': '15px'})),
+        dbc.Col(dbc.Input(id="input1", placeholder="Trans1", type="number",
+                          debounce=True, style={'font-size': '15px'})),
         html.Br(),
         # html.P(id="output1"),
     ]
 )
 
 
-@app.callback(Output("output1", "children"), [Input("input1", "value")])
-def output_trans1(value):
-    return value
-
-
-trans2_input = html.Div(
+trans2_input = dbc.Row(
     [
-        dbc.Label("Trans 2",  style={'font-size': '15px'}),
-        dbc.Input(id="input2", placeholder="Transmission run number.", type="number", debounce=True, style={'font-size': '15px'}),
+        # dbc.Col(dbc.Label("Trans 2",  style={'font-size': '15px'})),
+        dbc.Col(dbc.Input(id="input2", placeholder="Trans2", type="number",
+                          debounce=True, style={'font-size': '15px'})),
         html.Br(),
         # html.P(id="output2"),
     ]
@@ -328,7 +325,8 @@ def graph_row(trans1_value, trans2_value, value, n_int):
     # 3. Reduce and plot all other selected runs
     try:
         for run in value:
-            reduce(run, trans1_value, trans2_value)
+            if ('IvsQ_binned_' + str(run)) not in mtd.getObjectNames():
+                reduce(run, trans1_value, trans2_value)
 
             xd = mtd['IvsQ_binned_' + str(run)].dataX(0)
             yd = mtd['IvsQ_binned_' + str(run)].dataY(0)
@@ -385,17 +383,19 @@ def reduce_all(n_clicks, opts, trans1_value, trans2_value):
 
 app.layout = html.Div([html.Div(id='row0'),
                        html.Div(id='row1'),
-                       dbc.Row([dbc.Col(id="trans_col", children=[dbc.Row(trans1_input), dbc.Row(trans2_input)], md=1,
-                                        width={"offset": 1}),
+                       dbc.Row([dbc.Col(id="trans_col", children=[dbc.Row(trans1_input), dbc.Row(trans2_input)], style={'padding': 10},
+                                        md=1, width={"offset": 1}),
                                 # dbc.Col(trans2_input, md=1),
                                 dbc.Col(html.Div(id='graph_row'), md=7, width={"offset": 0}),
-                                dbc.Col(dcc.Dropdown(id='runlist-dropdown', placeholder="Select runs",
-                                                     multi=True,  style={'font-size': '15px'}), md=2),
+                                dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown', placeholder="Select runs",
+                                                     multi=True,  style={'font-size': '15px'}),
+                                                 className="dash-bootstrap"), md=2),
                                 dbc.Col(dbc.Button("Reduce all", color="dark", className="me-1", id="reduce-button"), md=1),
                                 # dbc.Col(dbc.Button(id="refresh-button", color="info", className="me-1"))
                                 ], style={'padding': 10}),
 
                        html.Div(id='hidden-div', style={'display': 'none'}),
+
 
                        dcc.Interval(
                             id='interval-component',
@@ -407,7 +407,8 @@ app.layout = html.Div([html.Div(id='row0'),
                            interval=60 * 1000,  # in milliseconds
                            n_intervals=0
                        )
-                       ]
+                       ],
+
                       )
 
 
