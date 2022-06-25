@@ -25,74 +25,106 @@ def get_values(session, str1=None, str2=None,):
         return m_inst.group(0)
     else:
         values = {}
-
         m = re.search('(?<=RB Number:).*(?=:)', inst_pvs)
-        # print(int(m.group(0)))
-        values['rbno'] = m.group(0)
+        try:
+            values['rbno'] = m.group(0)
+        except AttributeError:
+            values['rbno'] = "N/A"
 
         m = re.search('(?<=Run Status:).*(?=:)', inst_pvs)
-        # print(int(m.group(0)))
-        values['run_status'] = m.group(0)
-        values['run_status'] = m.group(0)
+        try:
+            values['run_status'] = m.group(0)
+        except AttributeError:
+            values['run_status'] = "N/A"
 
         m = re.search('(?<=Run Number:).*(?=:)', inst_pvs)
-        # print(int(m.group(0)))
-        values['run_number'] = m.group(0)
+        try:
+            values['run_number'] = m.group(0)
+        except AttributeError:
+            values['run_number'] = "N/A"
 
         m = re.search('(?<=Title:\s\s).*(?=:)', inst_pvs)
-        # print(m.group(0))
-        values['title'] = m.group(0)
+        try:
+            values['title'] = m.group(0)
+        except AttributeError:
+            values['title'] = "N/A"
 
         m = re.search('(?<=PHI:\s\s).*(?=deg:)', main)
-        # print(m.group(0))
-        values['PHI'] = m.group(0)
+        try:
+            values['PHI'] = m.group(0)
+        except AttributeError:
+            values['PHI'] = "N/A"
 
         m = re.search('(?<=THETA:\s\s).*(?=deg:)', main)
-        # print(m.group(0))
-        values['THETA'] = m.group(0)
+        try:
+            values['THETA'] = m.group(0)
+        except AttributeError:
+            values['THETA'] = "N/A"
 
         m = re.search('(?<=S1VG:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['S1VG'] = m.group(0)
+        try:
+            values['S1VG'] = m.group(0)
+        except AttributeError:
+            values['S1VG'] = "N/A"
 
         m = re.search('(?<=S1HG:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['S1HG'] = m.group(0)
+        try:
+            values['S1HG'] = m.group(0)
+        except AttributeError:
+            values['S1HG'] = "N/A"
 
         m = re.search('(?<=S2VG:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['S2VG'] = m.group(0)
+        try:
+            values['S2VG'] = m.group(0)
+        except AttributeError:
+            values['S2VG'] = "N/A"
 
         m = re.search('(?<=S2HG:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['S2HG'] = m.group(0)
+        try:
+            values['S2HG'] = m.group(0)
+        except AttributeError:
+            values['S2HG'] = "N/A"
 
         m = re.search('(?<=SM1ANGLE:\s\s).*(?=deg:)', main)
-        # print(m.group(0))
-        values['SM1ANGLE'] = m.group(0)
+        try:
+            values['SM1ANGLE'] = m.group(0)
+        except AttributeError:
+            values['SM1ANGLE'] = "N/A"
 
         m = re.search('(?<=SM1INBEAM:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['SM1INBEAM'] = m.group(0)
+        try:
+            values['SM1INBEAM'] = m.group(0)
+        except AttributeError:
+            values['SM1INBEAM'] = "N/A"
 
         m = re.search('(?<=SM2ANGLE:\s\s).*(?=deg:)', main)
-        # print(m.group(0))
-        values['SM2ANGLE'] = m.group(0)
+        try:
+            values['SM2ANGLE'] = m.group(0)
+        except AttributeError:
+            values['SM2ANGLE'] = "N/A"
 
         m = re.search('(?<=SM2INBEAM:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['SM2INBEAM'] = m.group(0)
+        try:
+            values['SM2INBEAM'] = m.group(0)
+        except AttributeError:
+            values['SM2INBEAM'] = "N/A"
 
         m = re.search('(?<=TRANS:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['TRANS'] = m.group(0)
+        try:
+            values['TRANS'] = m.group(0)
+        except AttributeError:
+            values['TRANS'] = "N/A"
 
         m = re.search('(?<=HEIGHT:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['HEIGHT'] = m.group(0)
+        try:
+            values['HEIGHT'] = m.group(0)
+        except AttributeError:
+            values['HEIGHT'] = "N/A"
 
         m = re.search('(?<=HEIGHT2:\s\s).*(?=:)', main)
-        # print(m.group(0))
-        values['HEIGHT2'] = m.group(0)
+        try:
+            values['HEIGHT2'] = m.group(0)
+        except AttributeError:
+            values['HEIGHT2'] = "N/A"
 
         return values
