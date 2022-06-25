@@ -157,7 +157,7 @@ def create_card(title, content, color):
 
     cb = []
     for c in card_content:
-        cb.append(html.H4(c, className="card-text"))
+        cb.append(html.H5(c, className="card-text"))
         cb.append(html.Br())
     card = dbc.Card(
         [
@@ -198,12 +198,12 @@ def output_trans2(value):
 
 def create_table(title, rows):
     table_head = [
-        html.Thead(html.Tr(html.Th(html.H4(html.B(title)), colSpan=str(len(rows[0])))))
+        html.Thead(html.Tr(html.Th(html.H5(html.B(title)), colSpan=str(len(rows[0])))))
     ]
 
     table_rows = []
     for row in rows:
-        table_rows.append(html.Tr([html.Td(html.H4(text)) for text in row]))
+        table_rows.append(html.Tr([html.Td(html.H6(text)) for text in row]))
 
     table_body = [html.Tbody(table_rows)]
 
@@ -383,7 +383,7 @@ def graph_row(trans1_value, trans2_value, value, n_int):
     )
     fig.update_yaxes(nticks=6)
 
-    gr = dcc.Graph(id='reflectivity-graph', figure=fig, style={'width': '100vh', 'height': '80vh'})
+    gr = dcc.Graph(id='reflectivity-graph', figure=fig, style={'height': '60vh'})
     return gr
 
 
@@ -446,7 +446,7 @@ app.layout = html.Div([
                                       className="dash-bootstrap"), md=2),
                      dbc.Col(dbc.Button("Reduce all", color="dark", className="me-1", id="reduce-button"), md=1),
                      ], style={'padding': 10})
-        ], style={'font-size': '15px'}),
+        ], style={'font-size': '15px', 'line-height': '5vh', 'padding': '10'}, selected_style={'padding': '0','line-height': '5vh'}),
         dcc.Tab(label='Detector image', value='tab-2-graph', children=[
             dbc.Row([
                 dbc.Col(html.Div(id='graph_row_2'), md=7, width={"offset": 1}),
@@ -454,7 +454,12 @@ app.layout = html.Div([
                                               multi=False, style={'font-size': '15px'}),
                                  className="dash-bootstrap"), md=2),
             ]),
-        ], style={'font-size': '15px'})]),
+        ], style={'font-size': '15px', 'line-height': '5vh', 'padding': '0'}, selected_style={'padding': '0', 'line-height': '5vh'})],
+        style={
+        # 'width': '50%',
+        'font-size': '120%',
+        'height': '5vh'
+        }),
     html.Div(id='hidden-div', style={'display': 'none'}),
 
     dcc.Interval(
