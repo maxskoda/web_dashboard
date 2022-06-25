@@ -383,7 +383,7 @@ def graph_row(trans1_value, trans2_value, value, n_int):
     )
     fig.update_yaxes(nticks=6)
 
-    gr = dcc.Graph(id='reflectivity-graph', figure=fig)
+    gr = dcc.Graph(id='reflectivity-graph', figure=fig, style={'width': '100vh', 'height': '80vh'})
     return gr
 
 
@@ -401,7 +401,7 @@ def graph_row_2(run):
 
     plotly_fig_2 = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
 
-    gr = dcc.Graph(id='detector-image-graph', figure=plotly_fig_2)
+    gr = dcc.Graph(id='detector-image-graph', figure=plotly_fig_2, style={'width': '80vh', 'height': '60vh'})
     return gr
 
 
