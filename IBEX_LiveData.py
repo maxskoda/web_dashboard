@@ -8,13 +8,18 @@ import re
 
 from main import get_values
 
+# Set transmission runs to be used:
 
+trans_low_1 = '66543'
+trans_low_2 = '66544'
+trans_high_1 = '65274'
+trans_high_2 = '65275'
 
 inst = "INTER"
 lambda_min = 1.8
-lambda_max = 15
-trans_SM = 'TRANS_SM'
-trans = 'TRANS'
+lambda_max = 17
+trans_low = 'TRANS_low'
+trans_high = 'TRANS_high'
 dq_q = 0.03
 TRANS_ROI = '70-90'
 ROI = '70-90'
@@ -33,7 +38,8 @@ ReflectometryISISLoadAndProcess(InputRunList='65272', ThetaIn=0.8,
                                 WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
                                 MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18, MonitorIntegrationWavelengthMin=4,
                                 MonitorIntegrationWavelengthMax=10,
-                                FirstTransmissionRunList='65274', SecondTransmissionRunList='65275',
+                                # FirstTransmissionRunList='65274', SecondTransmissionRunList='65275',
+                                FirstTransmissionRunList=trans_low_1, SecondTransmissionRunList=trans_low_2,
                                 StartOverlap=10, EndOverlap=12, ScaleRHSWorkspace=False,
                                 TransmissionProcessingInstructions='70-90',
                                 MomentumTransferMin=0.010321317306126728,
@@ -41,9 +47,18 @@ ReflectometryISISLoadAndProcess(InputRunList='65272', ThetaIn=0.8,
                                 MomentumTransferMax=0.1168874036214391,
                                 OutputWorkspaceBinned='IvsQ_binned_65272',
                                 OutputWorkspace='IvsQ_65272',
-                                OutputWorkspaceTransmission='TRANS_SM')
+                                OutputWorkspaceTransmission='TRANS_low')
 
-ReflectometryISISLoadAndProcess(InputRunList='65273', ThetaIn=2.3, AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='67-95', WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2, MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18, MonitorIntegrationWavelengthMin=4, MonitorIntegrationWavelengthMax=10, FirstTransmissionRunList='65276', SecondTransmissionRunList='65277', StartOverlap=10, EndOverlap=12, ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90', MomentumTransferMin=0.029666234509808882, MomentumTransferStep=0.055446760622640492, MomentumTransferMax=0.33612056568876092, OutputWorkspaceBinned='IvsQ_binned_65273', OutputWorkspace='IvsQ_65273', OutputWorkspaceTransmission='TRANS')
+ReflectometryISISLoadAndProcess(InputRunList='65273', ThetaIn=2.3, AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='67-95',
+                                WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2, MonitorBackgroundWavelengthMin=17,
+                                MonitorBackgroundWavelengthMax=18, MonitorIntegrationWavelengthMin=4, MonitorIntegrationWavelengthMax=10,
+                                # FirstTransmissionRunList='65276', SecondTransmissionRunList='65277',
+                                FirstTransmissionRunList=trans_high_1, SecondTransmissionRunList=trans_high_2,
+                                StartOverlap=10, EndOverlap=12, ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
+                                MomentumTransferMin=0.029666234509808882, MomentumTransferStep=0.055446760622640492,
+                                MomentumTransferMax=0.33612056568876092, OutputWorkspaceBinned='IvsQ_binned_65273',
+                                OutputWorkspace='IvsQ_65273', OutputWorkspaceTransmission='TRANS_high')
+
 # Stitch1DMany(InputWorkspaces='IvsQ_65272,IvsQ_65273', OutputWorkspace='IvsQ_65272_65273', Params='-0.055434', OutScaleFactors='0.841361')
 
 
@@ -56,9 +71,9 @@ qmin=4*3.1415/"""+str(lambda_max)+"""*(theta_in*3.141/180)
 qmax=4*3.1415/"""+str(lambda_min)+"""*(theta_in*3.141/180)
 
 if theta_in<1.0:\n
-\t trans='"""+trans_SM+"""'\n
+\t trans='"""+trans_low+"""'\n
 else:\n
-\t trans='"""+trans+"""'\n
+\t trans='"""+trans_high+"""'\n
 
 ReflectometryISISLoadAndProcess(InputRunList=input, ThetaIn=theta_in, SummationType='SumInQ', ReductionType='DivergentBeam', 
                         AnalysisMode='MultiDetectorAnalysis', 

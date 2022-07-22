@@ -53,6 +53,11 @@ dq_q = 0.03
 TRANS_ROI = '70-90'
 ROI = '70-90'
 
+# Load(Filename=r'\\isis.cclrc.ac.uk\inst$\ndxinter\instrument\data\cycle_21_2\INTER00065274.raw', OutputWorkspace='INTER00065274')
+# Load(Filename=r'\\isis.cclrc.ac.uk\inst$\ndxinter\instrument\data\cycle_21_2\INTER00065275.raw', OutputWorkspace='INTER00065275')
+# CreateTransmissionWorkspaceAuto(FirstTransmissionRun='INTER00065274', SecondTransmissionRun='INTER00065275', AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='70-90', ScaleRHSWorkspace=False, OutputWorkspace='TRANS_low')
+
+
 ReflectometryISISLoadAndProcess(InputRunList='65272', ThetaIn=0.8,
                                 AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='70-90',
                                 WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
@@ -157,7 +162,7 @@ def create_card(title, content, color):
 
     cb = []
     for c in card_content:
-        cb.append(html.H5(c, className="card-text"))
+        cb.append(html.H4(c, className="card-text"))
         cb.append(html.Br())
     card = dbc.Card(
         [
@@ -198,12 +203,12 @@ def output_trans2(value):
 
 def create_table(title, rows):
     table_head = [
-        html.Thead(html.Tr(html.Th(html.H5(html.B(title)), colSpan=str(len(rows[0])))))
+        html.Thead(html.Tr(html.Th(html.H4(html.B(title)), colSpan=str(len(rows[0])))))
     ]
 
     table_rows = []
     for row in rows:
-        table_rows.append(html.Tr([html.Td(html.H6(text)) for text in row]))
+        table_rows.append(html.Tr([html.Td(html.H5(text)) for text in row]))
 
     table_body = [html.Tbody(table_rows)]
 
@@ -484,7 +489,7 @@ def get_runs(cycle):
     return opt
 
 
-opt = get_runs('22_1')
+opt = get_runs('22_2')
 
 
 @app.callback(
@@ -493,7 +498,7 @@ opt = get_runs('22_1')
     [State("runlist-dropdown", "value")]
 )
 def make_dropdown_options(n, value):
-    opt = get_runs('22_1')
+    opt = get_runs('22_2')
     options = [{"label": v, "value": v} for v in opt]
 
     # if value not in [o["value"] for o in options]:
@@ -511,7 +516,7 @@ def make_dropdown_options(n, value):
     [State("runlist-dropdown-2", "value")]
 )
 def make_dropdown_options(n, value):
-    opt = get_runs('22_1')
+    opt = get_runs('22_2')
     options = [{"label": v, "value": v} for v in opt]
 
     # if value not in [o["value"] for o in options]:
