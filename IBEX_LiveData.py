@@ -10,17 +10,17 @@ from main import get_values
 
 # Set transmission runs to be used:
 
-trans_low_1 = '66543'
-trans_low_2 = '66544'
-trans_high_1 = '65274'
-trans_high_2 = '65275'
+trans_low_1 = '67174'
+trans_low_2 = '67175'
+trans_high_1 = '67176'
+trans_high_2 = '67178'
 
 inst = "INTER"
 lambda_min = 1.8
 lambda_max = 17
 trans_low = 'TRANS_low'
 trans_high = 'TRANS_high'
-dq_q = 0.03
+dq_q = 0.05
 TRANS_ROI = '70-90'
 ROI = '70-90'
 

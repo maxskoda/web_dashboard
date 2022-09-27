@@ -1,5 +1,29 @@
 from requests_html import HTMLSession, AsyncHTMLSession
 import re
+import requests
+
+
+def get_json_values(instrument='inter'):
+    url_inst = 'http://ndx'+instrument.lower()+':4812/group?name=INST&format=json'
+    url_blocks = 'http://ndx'+instrument.lower()+':4813/group?name=BLOCKS&format=json'
+
+    r_inst = requests.get(url_inst)
+    r_blocks = requests.get(url_blocks)
+
+    values = {}
+    for ch in r_blocks.json()['Channels']:
+        if isinstance(ch['Current Value']['Value'], float):
+            val = "{:.3f}".format(ch['Current Value']['Value'])
+        else:
+            val = str(ch['Current Value']['Value'])
+        values[ch['Channel'].split(':SB:')[1]] = val
+
+    for ch in r_inst.json()['Channels']:
+        try:
+            values[ch['Channel'].split(':DAE:')[1]] = str(ch['Current Value']['Value'])
+        except IndexError:
+            pass
+    return values
 
 def get_values(session, str1=None, str2=None,):
     #create the session

@@ -1,4 +1,8 @@
 # import mantid algorithms, numpy and matplotlib
+import base64
+import json
+
+from dash.exceptions import PreventUpdate
 from mantid.simpleapi import *
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -20,124 +24,26 @@ from plotly.subplots import make_subplots
 from plotly.express import data
 
 from requests_html import HTMLSession
-from main import get_values
+from main import get_values, get_json_values
 import threading
+
+global content_dict
+
+# some settings
+instrument = 'INTER'
+cycle = '22_3'
 
 now = datetime.datetime.now()
 dt_string = now.strftime("%d/%m/%Y   %H:%M")
 
-url = 'http://dataweb.isis.rl.ac.uk/IbexDataweb/default.html?Instrument=inter'
-session = HTMLSession()
-
-values = get_values(session)
+values = get_json_values(instrument) #get_values(session)
 try:
-    wksp = str(int(values['run_number']) - 1)
+    wksp = str(int(values['RUNNUMBER.VAL']) - 1)
 except ValueError:
     wksp = "66223"
 
-# chan = CaChannel('IN:"""+inst+""":REFL_01:PARAM:THETA')
-# chan.setTimeout(5.0)
-# chan.searchw()
-# as_string=True # set to False if you want a numeric value\n
-# theta = float(chan.getw(ca.DBR_STRING if as_string else None))
-# theta_in=abs(theta)
-# print("THETA: ", theta_in)
-
-##############
-inst = "INTER"
-lambda_min = 1.8
-lambda_max = 15
-trans_SM = 'TRANS_SM'
-trans = 'TRANS'
-dq_q = 0.03
-TRANS_ROI = '70-90'
-ROI = '70-90'
-
-# Load(Filename=r'\\isis.cclrc.ac.uk\inst$\ndxinter\instrument\data\cycle_21_2\INTER00065274.raw', OutputWorkspace='INTER00065274')
-# Load(Filename=r'\\isis.cclrc.ac.uk\inst$\ndxinter\instrument\data\cycle_21_2\INTER00065275.raw', OutputWorkspace='INTER00065275')
-# CreateTransmissionWorkspaceAuto(FirstTransmissionRun='INTER00065274', SecondTransmissionRun='INTER00065275', AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='70-90', ScaleRHSWorkspace=False, OutputWorkspace='TRANS_low')
-
-
-ReflectometryISISLoadAndProcess(InputRunList='65272', ThetaIn=0.8,
-                                AnalysisMode='MultiDetectorAnalysis', ProcessingInstructions='70-90',
-                                WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-                                MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18,
-                                MonitorIntegrationWavelengthMin=4,
-                                MonitorIntegrationWavelengthMax=10,
-                                FirstTransmissionRunList='65274', SecondTransmissionRunList='65275',
-                                StartOverlap=10, EndOverlap=12, ScaleRHSWorkspace=False,
-                                TransmissionProcessingInstructions='70-90',
-                                MomentumTransferMin=0.010321317306126728,
-                                MomentumTransferStep=0.055433662337842131,
-                                MomentumTransferMax=0.1168874036214391,
-                                OutputWorkspaceBinned='IvsQ_binned_65272',
-                                OutputWorkspace='IvsQ_65272',
-                                OutputWorkspaceTransmission='TRANS_SM')
-
-ReflectometryISISLoadAndProcess(InputRunList='65273', ThetaIn=2.3, AnalysisMode='MultiDetectorAnalysis',
-                                ProcessingInstructions='67-95', WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-                                MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18,
-                                MonitorIntegrationWavelengthMin=4, MonitorIntegrationWavelengthMax=10,
-                                FirstTransmissionRunList='65276', SecondTransmissionRunList='65277', StartOverlap=10,
-                                EndOverlap=12, ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
-                                MomentumTransferMin=0.029666234509808882, MomentumTransferStep=0.055446760622640492,
-                                MomentumTransferMax=0.33612056568876092, OutputWorkspaceBinned='IvsQ_binned_65273',
-                                OutputWorkspace='IvsQ_65273', OutputWorkspaceTransmission='TRANS')
-
-# Stitch1DMany(InputWorkspaces='IvsQ_65272,IvsQ_65273', OutputWorkspace='IvsQ_65272_65273', Params='-0.055434', OutScaleFactors='0.841361')
-
-
-# script = """from CaChannel import CaChannel, CaChannelException, ca\n"""
-
-script = """# chan = CaChannel('IN:""" + inst + """:REFL_01:PARAM:THETA')\n
-#chan.setTimeout(5.0)\n
-#chan.searchw()\n
-#as_string=True # set to False if you want a numeric value\n
-#theta = float(chan.getw(ca.DBR_STRING if as_string else None))
-#theta_in=abs(theta)\n
-theta_in=float(values['THETA'])\n
-qmin=4*3.1415/""" + str(lambda_max) + """*(theta_in*3.141/180)
-qmax=4*3.1415/""" + str(lambda_min) + """*(theta_in*3.141/180)
-
-if theta_in<1.0:\n
-\t trans='""" + trans_SM + """'\n
-else:\n
-\t trans='""" + trans + """'\n
-
-ReflectometryISISLoadAndProcess(InputRunList=input, ThetaIn=theta_in, SummationType='SumInQ', ReductionType='DivergentBeam', 
-                        AnalysisMode='MultiDetectorAnalysis', 
-                        ProcessingInstructions='""" + ROI + """', 
-                        WavelengthMin=1.5, WavelengthMax=17, 
-                        I0MonitorIndex=2, MonitorBackgroundWavelengthMin=17, MonitorBackgroundWavelengthMax=18, 
-                        MonitorIntegrationWavelengthMin=4, MonitorIntegrationWavelengthMax=10, SubtractBackground=True, 
-                        BackgroundCalculationMethod='AveragePixelFit', 
-                        FirstTransmissionRunList=trans, StartOverlap=10, EndOverlap=12, ScaleRHSWorkspace=False, 
-                        TransmissionProcessingInstructions='""" + TRANS_ROI + """', Debug=True, 
-                        MomentumTransferMin=qmin, MomentumTransferStep=""" + str(dq_q) + """, 
-                        MomentumTransferMax=qmax, OutputWorkspaceBinned='0_IvsQ_binned', 
-                        OutputWorkspace='0_IvsQ', OutputWorkspaceWavelength='0_IvsLam', 
-                        OutputWorkspaceTransmission='TRANS_LAM_0', 
-                        OutputWorkspaceFirstTransmission='TRANS_LAM_0a', OutputWorkspaceSecondTransmission='TRANS_LAM_0b')
-
-output="0_IvsQ_binned" """
-
-
-def f(script):
-    StartLiveData(Instrument=inst, ProcessingScript=script, AccumulationMethod='Replace',
-                  UpdateEvery=10, OutputWorkspace='0_IvsQ_binned')
-    xd = mtd['0_IvsQ_binned'].dataX(0)
-    yd = mtd['0_IvsQ_binned'].dataY(0)
-    ed = mtd['0_IvsQ_binned'].dataE(0)
-    return xd, yd, ed
-
-
-##############
 
 # t1 = threading.Thread(target=f, args=[xd, yd, ed])
-# xd, yd, ed = f(script=script)
-
-
-# xd, yd, ed = np.loadtxt('text.csv', delimiter=' ', usecols=(0, 1, 2), unpack=True)
 
 
 colors = {
@@ -231,31 +137,40 @@ empty_card = create_card("", "", "secondary")
 @app.callback(Output('row0', 'children'),
               Input('interval-component', 'n_intervals'))
 def row0(n):
-    valuesl = get_values(session)
+    valuesl = get_json_values(instrument) #get_values(session)
     now = datetime.datetime.now()
     dt_string = now.strftime("%d/%m/%Y   %H:%M")
     # ### Top row #####
     card3 = create_card("Date and Time", dt_string, "secondary")
-    card2 = create_card("Title", valuesl['title'], "primary")
-    rno = str(int(valuesl['run_number']))
-    run_status = valuesl['run_status'].replace('\\xa0', '')
+    card2 = create_card("Title", valuesl['TITLE.VAL'], "primary")
+    rno = str(int(valuesl['RUNNUMBER.VAL']))
+    run_status = valuesl['RUNSTATE.VAL']
 
     col_dict = {'RUNNING': "success", 'SETUP': "primary", 'PAUSED': "danger"}
     rs = run_status.replace('\\xa0', '').strip()
 
     card1 = create_card("Instrument - Run No", "INTER - " + rno, col_dict[rs])
 
-    graphRow0 = dbc.Row([dbc.Col(id='card1', children=[card1], md=2),
-                         dbc.Col(id='card2', children=[card2], md=8),
-                         dbc.Col(id='card3', children=[card3], md=2)], style={'padding': 10})
+    # Run number:
+    run_table = create_table("Instrument - Run No", [["INTER - " + valuesl["RUNNUMBER.VAL"]]])
+
+    # Title:
+    title_table = create_table("Title", [[valuesl["TITLE.VAL"]]])
+
+    # Time/Date:
+    time_table = create_table("Date and Time", [[dt_string]])
+
+    graphRow0 = dbc.Row([dbc.Col(id='card1', children=[run_table], md=2),
+                         dbc.Col(id='card2', children=[title_table], md=8),
+                         dbc.Col(id='card3', children=[time_table], md=2)], style={'padding': 10})
     return graphRow0
 
 
 @app.callback(Output('row1', 'children'),
               Input('interval-component', 'n_intervals'))
 def row1(n):
-    valuesl = get_values(session)
-    # print(valuesl["S1VG"])
+    valuesl = get_json_values(instrument) #get_values(session)
+
     # SLIT 1:
     slit1_table = create_table("Slit 1", [["S1VG", valuesl["S1VG"]],
                                           ["S1HG", valuesl["S1HG"]]])
@@ -292,30 +207,69 @@ wksp = LoadISISNexus('INTER00066223')
 z = wksp.extractY()
 plotly_fig = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
 
+perangle = [['0.8', '', '66475', '66476', '70-90', '', '0.08', '', '', '70-90', '20-60'],
+            ['2.3', '', '66746', '66747', '70-90', '', '', '', '', '70-95', '140-150']]
 
-# wksp = "66223"
-# LoadISISNexus(wksp, OutputWorkspace='TOF_' + wksp)
-# CropWorkspace(InputWorkspace='TOF_' + wksp, OutputWorkspace=wksp + '_lam', StartWorkspaceIndex=5)
-# ConvertUnits(InputWorkspace=wksp + '_lam', OutputWorkspace=wksp + '_lam', Target='Wavelength', AlignBins=True)
-# CropWorkspace(InputWorkspace=wksp + '_lam', OutputWorkspace=wksp + '_lam', XMax=17)
-#
-# plotly_fig, (current_ax, NR_ax) = plt.subplots(2, 1, subplot_kw={'projection': 'mantid'}, figsize=(7, 8))
-# c = current_ax.pcolormesh(mtd[wksp+'_lam'])#,  norm=colors.LogNorm())
+
+def settings_table(settings):
+    table_header = [
+        html.Thead(html.Tr([html.Th("Angle"), html.Th("Title"), html.Th("1st Trans run(s)"), html.Th("2nd Trans run(s)"),
+                            html.Th("Trans spectra"), html.Th("Q min"), html.Th("Q max"), html.Th("dQ/Q"),
+                            html.Th("Scale"), html.Th("ROI"), html.Th("Background")]))
+    ]
+    rows = []
+    for r in settings:
+        row = []
+        for col in r:
+            row.append(html.Td(col))
+        rows.append(html.Tr(row))
+
+    table_body = [html.Tbody(rows)]
+
+    table = dbc.Table(table_header + table_body, bordered=True, size='md')
+    return table
 
 
 def reduce(run, trans1=None, trans2=None):
+    global content_dict
+    settings_dict = {}
+
+    if content_dict is not None:
+        settings_dict['AnalysisMode'] = 'MultiDetectorAnalysis'
+        settings_dict['WavelengthMin'] = content_dict['instrumentView']['lamMinEdit']
+        settings_dict['WavelengthMax'] = content_dict['instrumentView']['lamMaxEdit']
+        settings_dict['I0MonitorIndex'] = content_dict['instrumentView']['I0MonitorIndex']
+        settings_dict['MonitorBackgroundWavelengthMin'] = content_dict['instrumentView']['monBgMinEdit']
+        settings_dict['MonitorBackgroundWavelengthMax'] = content_dict['instrumentView']['monBgMaxEdit']
+        settings_dict['MonitorIntegrationWavelengthMin'] = content_dict['instrumentView']['monIntMinEdit']
+        settings_dict['MonitorIntegrationWavelengthMax'] = content_dict['instrumentView']['monIntMaxEdit']
+
+        settings_dict['StartOverlap'] = content_dict['experimentView']['startOverlapEdit']
+        settings_dict['EndOverlap'] = content_dict['experimentView']['endOverlapEdit']
+        settings_dict['ScaleRHSWorkspace'] = content_dict['experimentView']['transScaleRHSCheckBox']
+
+        # need to check which row
+        s_row=0
+        settings_dict['FirstTransmissionRunList'] = content_dict['experimentView']['perAngleDefaults']['rows'][s_row][2]
+        settings_dict['SecondTransmissionRunList'] = content_dict['experimentView']['perAngleDefaults']['rows'][s_row][3]
+        settings_dict['TransmissionProcessingInstructions'] = content_dict['experimentView']['perAngleDefaults']['rows'][s_row][4]
+        settings_dict['ProcessingInstructions'] = content_dict['experimentView']['perAngleDefaults']['rows'][s_row][9]
+
+    print(settings_dict)
+
     if trans1 is not None and trans2 is not None:
-        ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
-                                        WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-                                        MonitorBackgroundWavelengthMin=17,
-                                        MonitorBackgroundWavelengthMax=18,
-                                        MonitorIntegrationWavelengthMin=4,
-                                        MonitorIntegrationWavelengthMax=10,
-                                        FirstTransmissionRunList=str(trans1),
-                                        SecondTransmissionRunList=str(trans2),
-                                        StartOverlap=10, EndOverlap=12,
-                                        ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
-                                        ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
+        ReflectometryISISLoadAndProcess(InputRunList=str(run), **settings_dict, OutputWorkspaceBinned='IvsQ_binned_' + str(run))
+        # ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
+        #                                 WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
+        #                                 MonitorBackgroundWavelengthMin=17,
+        #                                 MonitorBackgroundWavelengthMax=18,
+        #                                 MonitorIntegrationWavelengthMin=4,
+        #                                 MonitorIntegrationWavelengthMax=10,
+        #                                 FirstTransmissionRunList=str(trans1),
+        #                                 SecondTransmissionRunList=str(trans2),
+        #                                 StartOverlap=10, EndOverlap=12,
+        #                                 ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
+        #                                 ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
     elif trans1 is not None and trans2 is None:
         ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
                                         WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
@@ -394,9 +348,8 @@ def graph_row(trans1_value, trans2_value, value, n_int):
 
 @app.callback(Output('graph_row_2', 'children'),
               Input('runlist-dropdown-2', 'value'))
-              # Input('tabs-graph', 'value'))
+# Input('tabs-graph', 'value'))
 def graph_row_2(run):
-
     try:
         wksp = mtd[str(run)]
         z = wksp.extractY()
@@ -410,17 +363,6 @@ def graph_row_2(run):
     return gr
 
 
-# @app.callback(
-#     Output("interval-component", "disabled"),
-#     [Input("reduce-button", "n_clicks")],
-#     [State("interval-component", "disabled")],
-# )
-# def toggle_interval(n, disabled):
-#     if n:
-#         return not disabled
-#     return disabled
-
-
 @app.callback(
     Output('interval-component', 'disabled'),
     Input('reduce-button', 'n_clicks'),
@@ -428,20 +370,24 @@ def graph_row_2(run):
     [State('input1', 'value'), State('input2', 'value')]
 )
 def reduce_all(n_clicks, opts, trans1_value, trans2_value):
+    global content_dict
+
+    for r in content_dict['experimentView']['perAngleDefaults']['rows']:
+        print(r)
     # Reduce all  runs
-    try:
-        for run in opts[0]:
-            reduce(run['value'], trans1_value, trans2_value)
-        print(run['value'], " reduced!")
-    except TypeError:
-        print('No runs selected.')
-    return False
+    # try:
+    #     for run in opts[0]:
+    #         reduce(run['value'], trans1_value, trans2_value)
+    #     print(run['value'], " reduced!")
+    # except TypeError:
+    #     print('No runs selected.')
+    # return False
 
 
 app.layout = html.Div([
     html.Div(id='row0'),
     html.Div(id='row1'),
-    dcc.Tabs(id="tabs-graph", value='tab-1-graph', children=[
+    dbc.Tabs(id="tabs-graph", children=[  #value='tab-1-graph'
         dcc.Tab(label='Reduced data', children=[
             dbc.Row([dbc.Col(id="trans_col", children=[dbc.Row(trans1_input), dbc.Row(trans2_input)],
                              md=1, width={"offset": 1}),
@@ -449,22 +395,48 @@ app.layout = html.Div([
                      dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown', placeholder="Select runs",
                                                    multi=True, style={'font-size': '15px'}),
                                       className="dash-bootstrap"), md=2),
-                     dbc.Col(dbc.Button("Reduce all", color="dark", className="me-1", id="reduce-button"), md=1),
+                     #dbc.Col(dbc.Button("Reduce all", color="dark", className="me-1", id="reduce-button"), md=1),
                      ], style={'padding': 10})
-        ], style={'font-size': '15px', 'line-height': '5vh', 'padding': '10'}, selected_style={'padding': '0','line-height': '5vh'}),
-        dcc.Tab(label='Detector image', value='tab-2-graph', children=[
+        ]),
+        # style={'font-size': '15px', 'line-height': '5vh', 'padding': '10'}),
+                # selected_style={'padding': '0', 'line-height': '5vh'}),
+        dcc.Tab(label='Detector image', id='tab-2-graph', children=[ #value='tab-2-graph',
             dbc.Row([
                 dbc.Col(html.Div(id='graph_row_2'), md=7, width={"offset": 1}),
                 dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown-2', placeholder="Select runs",
                                               multi=False, style={'font-size': '15px'}),
                                  className="dash-bootstrap"), md=2),
             ]),
-        ], style={'font-size': '15px', 'line-height': '5vh', 'padding': '0'}, selected_style={'padding': '0', 'line-height': '5vh'})],
-        style={
-        # 'width': '50%',
-        'font-size': '120%',
-        'height': '5vh'
-        }),
+        ]),
+        #style={'font-size': '15px', 'line-height': '5vh', 'padding': '0'}),
+                # selected_style={'padding': '0', 'line-height': '5vh'}),
+        dcc.Tab(label='Settings', children=[
+            dcc.Upload(id="upload-data", children=html.Div([
+                'Drag and Drop or ',
+                html.A('Select a File')
+            ]),  style={
+                'width': '100%',
+                'height': '60px',
+                'lineHeight': '60px',
+                'borderWidth': '1px',
+                'borderStyle': 'dashed',
+                'borderRadius': '5px',
+                'textAlign': 'center'
+            }),
+            html.Div(
+                [
+                    dbc.Row(dbc.Col(html.Div(id="output-data-upload"), width={"size": 6, "offset": 3})),
+
+                ])
+        ],)
+                # style={'font-size': '15px', 'line-height': '5vh', 'padding': '0'}),
+                # selected_style={'padding': '0', 'line-height': '5vh'}),
+    ],
+             style={
+                 # 'width': '50%',
+                 'font-size': '120%',
+                 'height': '5vh'
+             }),
     html.Div(id='hidden-div', style={'display': 'none'}),
 
     dcc.Interval(
@@ -481,15 +453,48 @@ app.layout = html.Div([
 )
 
 
+@app.callback(
+    Output("output-data-upload", "children"),
+    Input("upload-data", "contents"),
+    State("upload-data", "filename"),
+)
+def on_data_upload(contents, filename):
+    global content_dict
+    # print("DONE")
+    # if contents is None:
+    #     raise PreventUpdate
+
+    if not filename.endswith(".json"):
+        return "Please upload a file with the .json extension"
+
+    content_type, content_string = contents.split(",")
+    decoded = base64.b64decode(content_string)
+
+    # this is a dict!
+    content_dict = json.loads(decoded)
+    for r in content_dict['experimentView']['perAngleDefaults']['rows']:
+        print(r)
+
+    return settings_table(content_dict['experimentView']['perAngleDefaults']['rows'])  #str(data['experimentView']['perAngleDefaults']['rows'][0])
+
+
 def get_runs(cycle):
-    ISISJournalGetExperimentRuns(Cycle=cycle, InvestigationId=str(values['rbno'].strip()),
-                                 OutputWorkspace='RB' + str(values['rbno'].strip()))
-    runs = mtd['RB' + str(values['rbno'].strip())]
+    try:
+        ISISJournalGetExperimentRuns(Cycle=cycle, InvestigationId=str(values['_RBNUMBER.VAL'].strip()),
+                                 OutputWorkspace='RB' + str(values['_RBNUMBER.VAL'].strip()))
+        runs = mtd['RB' + str(values['_RBNUMBER.VAL'].strip())]
+    except ValueError:
+        rbno = "2210267" #input("Please enter a valid RB number:")
+        ISISJournalGetExperimentRuns(Cycle=cycle, InvestigationId=str(rbno),
+                                     OutputWorkspace='RB' + str(rbno))
+        runs = mtd['RB' + str(rbno)]
+
     opt = [item for item in runs.column(1)]
+    print(opt)
     return opt
 
 
-opt = get_runs('22_2')
+opt = get_runs(cycle)
 
 
 @app.callback(
@@ -498,7 +503,7 @@ opt = get_runs('22_2')
     [State("runlist-dropdown", "value")]
 )
 def make_dropdown_options(n, value):
-    opt = get_runs('22_2')
+    opt = get_runs(cycle)
     options = [{"label": v, "value": v} for v in opt]
 
     # if value not in [o["value"] for o in options]:
@@ -516,7 +521,7 @@ def make_dropdown_options(n, value):
     [State("runlist-dropdown-2", "value")]
 )
 def make_dropdown_options(n, value):
-    opt = get_runs('22_2')
+    opt = get_runs(cycle)
     options = [{"label": v, "value": v} for v in opt]
 
     # if value not in [o["value"] for o in options]:
