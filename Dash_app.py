@@ -230,7 +230,7 @@ def settings_table(settings):
     return table
 
 
-def reduce(run, trans1=None, trans2=None):
+def reduce(run):#, trans1=None, trans2=None):
     global content_dict
     settings_dict = {}
 
@@ -257,49 +257,18 @@ def reduce(run, trans1=None, trans2=None):
 
     print(settings_dict)
 
-    if trans1 is not None and trans2 is not None:
-        ReflectometryISISLoadAndProcess(InputRunList=str(run), **settings_dict, OutputWorkspaceBinned='IvsQ_binned_' + str(run))
-        # ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
-        #                                 WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-        #                                 MonitorBackgroundWavelengthMin=17,
-        #                                 MonitorBackgroundWavelengthMax=18,
-        #                                 MonitorIntegrationWavelengthMin=4,
-        #                                 MonitorIntegrationWavelengthMax=10,
-        #                                 FirstTransmissionRunList=str(trans1),
-        #                                 SecondTransmissionRunList=str(trans2),
-        #                                 StartOverlap=10, EndOverlap=12,
-        #                                 ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
-        #                                 ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
-    elif trans1 is not None and trans2 is None:
-        ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
-                                        WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-                                        MonitorBackgroundWavelengthMin=17,
-                                        MonitorBackgroundWavelengthMax=18,
-                                        MonitorIntegrationWavelengthMin=4,
-                                        MonitorIntegrationWavelengthMax=10,
-                                        FirstTransmissionRunList=str(trans1),
-                                        StartOverlap=10, EndOverlap=12,
-                                        ScaleRHSWorkspace=False, TransmissionProcessingInstructions='70-90',
-                                        ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
-    else:
-        ReflectometryISISLoadAndProcess(InputRunList=str(run), AnalysisMode='MultiDetectorAnalysis',
-                                        WavelengthMin=1.5, WavelengthMax=17, I0MonitorIndex=2,
-                                        MonitorBackgroundWavelengthMin=17,
-                                        MonitorBackgroundWavelengthMax=18,
-                                        MonitorIntegrationWavelengthMin=4,
-                                        MonitorIntegrationWavelengthMax=10,
-                                        ProcessingInstructions='70-90', OutputWorkspaceBinned='IvsQ_binned_' + str(run))
+    ReflectometryISISLoadAndProcess(InputRunList=str(run), **settings_dict, OutputWorkspaceBinned='IvsQ_binned_' + str(run))
 
 
 @app.callback(
     Output('graph_row', 'children'),
-    [Input('input1', 'value'), Input('input2', 'value')],
+    # [Input('input1', 'value'), Input('input2', 'value')],
     Input('runlist-dropdown', 'value'),
     Input('interval-component', 'n_intervals'),
 )
-def graph_row(trans1_value, trans2_value, value, n_int):
-    global fig
-    print("TRANSMISSIONS: ", trans1_value, trans2_value)
+def graph_row(value, n_int): #trans1_value, trans2_value,
+    global fig, content_dict
+    # print("TRANSMISSIONS: ", trans1_value, trans2_value)
     print("Runs: ", value)
     # Get live data from file
     xd, yd, ed = np.loadtxt('text.csv', delimiter=' ', usecols=(0, 1, 2), unpack=True)
@@ -317,8 +286,10 @@ def graph_row(trans1_value, trans2_value, value, n_int):
     # 3. Reduce and plot all other selected runs
     try:
         for run in value:
-            if ('IvsQ_binned_' + str(run)) not in mtd.getObjectNames():
-                reduce(run, trans1_value, trans2_value)
+            if ('IvsQ_binned_' + str(run)) not in mtd.getObjectNames() and 'content_dict' in globals():
+                reduce(run)#, trans1_value, trans2_value)
+            else:
+                print("Please load a valid settings file!")
 
             xd = mtd['IvsQ_binned_' + str(run)].dataX(0)
             yd = mtd['IvsQ_binned_' + str(run)].dataY(0)
@@ -339,6 +310,7 @@ def graph_row(trans1_value, trans2_value, value, n_int):
         uirevision="Don't change",
         margin=dict(l=20, r=20, t=20, b=20),
         paper_bgcolor="LightSteelBlue",
+        hovermode='closest',
     )
     fig.update_yaxes(nticks=6)
 
@@ -363,47 +335,25 @@ def graph_row_2(run):
     return gr
 
 
-@app.callback(
-    Output('interval-component', 'disabled'),
-    Input('reduce-button', 'n_clicks'),
-    State('runlist-dropdown', 'options'),
-    [State('input1', 'value'), State('input2', 'value')]
-)
-def reduce_all(n_clicks, opts, trans1_value, trans2_value):
-    global content_dict
-
-    for r in content_dict['experimentView']['perAngleDefaults']['rows']:
-        print(r)
-    # Reduce all  runs
-    # try:
-    #     for run in opts[0]:
-    #         reduce(run['value'], trans1_value, trans2_value)
-    #     print(run['value'], " reduced!")
-    # except TypeError:
-    #     print('No runs selected.')
-    # return False
-
-
 app.layout = html.Div([
     html.Div(id='row0'),
     html.Div(id='row1'),
     dbc.Tabs(id="tabs-graph", children=[  #value='tab-1-graph'
         dcc.Tab(label='Reduced data', children=[
-            dbc.Row([dbc.Col(id="trans_col", children=[dbc.Row(trans1_input), dbc.Row(trans2_input)],
-                             md=1, width={"offset": 1}),
-                     dbc.Col(html.Div(id='graph_row'), md=7, width={"offset": 0}),
-                     dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown', placeholder="Select runs",
+            dbc.Row([#dbc.Col(id="trans_col", children=[dbc.Row(trans1_input), dbc.Row(trans2_input)],
+                      #       md=1, width={"offset": 1}),
+                     dbc.Col(html.Div(id='graph_row'), md=8, width={"offset": 2}),
+                     dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown', placeholder="Select runs - hover for title",
                                                    multi=True, style={'font-size': '15px'}),
                                       className="dash-bootstrap"), md=2),
-                     #dbc.Col(dbc.Button("Reduce all", color="dark", className="me-1", id="reduce-button"), md=1),
                      ], style={'padding': 10})
         ]),
         # style={'font-size': '15px', 'line-height': '5vh', 'padding': '10'}),
                 # selected_style={'padding': '0', 'line-height': '5vh'}),
         dcc.Tab(label='Detector image', id='tab-2-graph', children=[ #value='tab-2-graph',
             dbc.Row([
-                dbc.Col(html.Div(id='graph_row_2'), md=7, width={"offset": 1}),
-                dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown-2', placeholder="Select runs",
+                dbc.Col(html.Div(id='graph_row_2'), md=7, width={"offset": 2}),
+                dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown-2', placeholder="Select runs - hover for title",
                                               multi=False, style={'font-size': '15px'}),
                                  className="dash-bootstrap"), md=2),
             ]),
@@ -490,11 +440,12 @@ def get_runs(cycle):
         runs = mtd['RB' + str(rbno)]
 
     opt = [item for item in runs.column(1)]
+    titles = [item for item in runs.column(2)]
     print(opt)
-    return opt
+    return opt, titles
 
 
-opt = get_runs(cycle)
+opt, titles = get_runs(cycle)
 
 
 @app.callback(
@@ -503,15 +454,13 @@ opt = get_runs(cycle)
     [State("runlist-dropdown", "value")]
 )
 def make_dropdown_options(n, value):
-    opt = get_runs(cycle)
-    options = [{"label": v, "value": v} for v in opt]
+    opt, titles = get_runs(cycle)
+    a_zip = zip(opt, titles)
+    zipped_list = list(a_zip)
 
-    # if value not in [o["value"] for o in options]:
-    #     # if the value is not in the new options list, we choose a different value
-    #     if options:
-    #         value = options[0]["value"]
-    #     else:
-    #         value = None
+    options = [{"label": v, "value": v, "title": t} for v, t in zipped_list]
+    # options = [{"label": v, "value": v, "title": t} for v in opt for t in titles]
+
     return options, value
 
 
@@ -520,16 +469,13 @@ def make_dropdown_options(n, value):
     [Input("interval-component-2", "n_intervals")],
     [State("runlist-dropdown-2", "value")]
 )
-def make_dropdown_options(n, value):
-    opt = get_runs(cycle)
-    options = [{"label": v, "value": v} for v in opt]
+def make_dropdown_2_options(n, value):
+    opt, titles = get_runs(cycle)
+    a_zip = zip(opt, titles)
+    zipped_list = list(a_zip)
 
-    # if value not in [o["value"] for o in options]:
-    #     # if the value is not in the new options list, we choose a different value
-    #     if options:
-    #         value = options[0]["value"]
-    #     else:
-    #         value = None
+    options = [{"label": v, "value": v, "title": t} for v, t in zipped_list]
+
     return options, value
 
 
