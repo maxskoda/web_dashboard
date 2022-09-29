@@ -226,7 +226,14 @@ def settings_table(settings):
 
     table_body = [html.Tbody(rows)]
 
-    table = dbc.Table(table_header + table_body, bordered=True, size='md')
+    table = dbc.Table(
+        table_header + table_body,
+        bordered=True,
+        size='lg',
+        style={
+            'fontSize': '16px',
+        },
+    )
     return table
 
 
@@ -313,6 +320,7 @@ def graph_row(value, n_int): #trans1_value, trans2_value,
         hovermode='closest',
     )
     fig.update_yaxes(nticks=6)
+    fig.update_yaxes(nticks=6)
 
     gr = dcc.Graph(id='reflectivity-graph', figure=fig, style={'height': '60vh'})
     return gr
@@ -362,8 +370,8 @@ app.layout = html.Div([
                 # selected_style={'padding': '0', 'line-height': '5vh'}),
         dcc.Tab(label='Settings', children=[
             dcc.Upload(id="upload-data", children=html.Div([
-                'Drag and Drop or ',
-                html.A('Select a File')
+                html.H4('Drag and Drop or '),
+                html.A(html.H4('Select a File'))
             ]),  style={
                 'width': '100%',
                 'height': '60px',
@@ -375,7 +383,7 @@ app.layout = html.Div([
             }),
             html.Div(
                 [
-                    dbc.Row(dbc.Col(html.Div(id="output-data-upload"), width={"size": 6, "offset": 3})),
+                    dbc.Row(dbc.Col(html.Div(id="output-data-upload"), width={"size": 8, "offset": 2})),
 
                 ])
         ],)
