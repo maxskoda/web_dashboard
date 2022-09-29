@@ -326,6 +326,21 @@ def graph_row(value, n_int): #trans1_value, trans2_value,
     return gr
 
 
+@app.callback(Output('graph_row_2_live', 'children'),
+              Input('runlist-dropdown-2', 'value'))
+def graph_row_2_live(run):
+    try:
+        wksp = mtd[str(run)]
+        z = wksp.extractY()
+    except KeyError:
+        wksp = Load(str(run), OutputWorkspace=str(run))
+        z = wksp.extractY()
+
+    plotly_fig_2 = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
+
+    gr = dcc.Graph(id='detector-image-graph', figure=plotly_fig_2, style={'width': '70vh', 'height': '60vh'})
+    return gr
+
 @app.callback(Output('graph_row_2', 'children'),
               Input('runlist-dropdown-2', 'value'))
 # Input('tabs-graph', 'value'))
@@ -339,7 +354,7 @@ def graph_row_2(run):
 
     plotly_fig_2 = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
 
-    gr = dcc.Graph(id='detector-image-graph', figure=plotly_fig_2, style={'width': '80vh', 'height': '60vh'})
+    gr = dcc.Graph(id='detector-image-graph', figure=plotly_fig_2, style={'width': '70vh', 'height': '60vh'})
     return gr
 
 
@@ -360,7 +375,8 @@ app.layout = html.Div([
                 # selected_style={'padding': '0', 'line-height': '5vh'}),
         dcc.Tab(label='Detector image', id='tab-2-graph', children=[ #value='tab-2-graph',
             dbc.Row([
-                dbc.Col(html.Div(id='graph_row_2'), md=7, width={"offset": 2}),
+                dbc.Col(html.Div(id='graph_row_2_live'), md=5),
+                dbc.Col(html.Div(id='graph_row_2'), md=5),
                 dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown-2', placeholder="Select runs - hover for title",
                                               multi=False, style={'font-size': '15px'}),
                                  className="dash-bootstrap"), md=2),
