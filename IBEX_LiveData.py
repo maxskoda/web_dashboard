@@ -27,7 +27,7 @@ dq_q = 0.05
 TRANS_ROI = '70-90'
 ROI = '70-90'
 
-url='http://dataweb.isis.rl.ac.uk/IbexDataweb/default.html?Instrument=inter'
+url = 'http://dataweb.isis.rl.ac.uk/IbexDataweb/default.html?Instrument=inter'
 session = HTMLSession()
 values = get_values(session)
 
@@ -95,8 +95,8 @@ ReflectometryISISLoadAndProcess(InputRunList=input, ThetaIn=theta_in, SummationT
 
 output="0_IvsQ_binned" """
 
-# StartLiveData(Instrument=inst, ProcessingScript=script, AccumulationMethod='Replace',
-#               UpdateEvery=10, OutputWorkspace='0_IvsQ_binned')
+StartLiveData(Instrument=inst, ProcessingScript=script, AccumulationMethod='Replace',
+              UpdateEvery=10, OutputWorkspace='0_IvsQ_binned')
 
 StartLiveData(Instrument='INTER', Listener='ISISHistoDataListener', Address='NDXINTER:6789',
                       StartTime='1990-01-01T00:00:00', AccumulationMethod='Replace', OutputWorkspace='dae')
@@ -108,7 +108,7 @@ fig = plt.figure()  # Create figure
 axes = fig.add_subplot(111) # Add subplot (dont worry only one plot appears)
 
 axes.set_autoscale_on(True) # enable autoscale
-axes.autoscale_view(True,True,True)
+axes.autoscale_view(True, True, True)
 
 try:
     xd = mtd['0_IvsQ_binned'].dataX(0)[:-1]
