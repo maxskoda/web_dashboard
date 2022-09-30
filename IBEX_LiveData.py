@@ -1,9 +1,12 @@
 # import mantid algorithms, numpy and matplotlib
+import time
+
 from mantid.simpleapi import *
 import matplotlib.pyplot as plt
 import numpy as np
 import urllib
 from requests_html import HTMLSession
+import plotly.express as px
 import re
 
 from main import get_values
@@ -92,8 +95,12 @@ ReflectometryISISLoadAndProcess(InputRunList=input, ThetaIn=theta_in, SummationT
 
 output="0_IvsQ_binned" """
 
-StartLiveData(Instrument=inst, ProcessingScript=script, AccumulationMethod='Replace',
-              UpdateEvery=10, OutputWorkspace='0_IvsQ_binned')
+# StartLiveData(Instrument=inst, ProcessingScript=script, AccumulationMethod='Replace',
+#               UpdateEvery=10, OutputWorkspace='0_IvsQ_binned')
+
+StartLiveData(Instrument='INTER', Listener='ISISHistoDataListener', Address='NDXINTER:6789',
+                      StartTime='1990-01-01T00:00:00', AccumulationMethod='Replace', OutputWorkspace='dae')
+
 
 
 
@@ -103,32 +110,45 @@ axes = fig.add_subplot(111) # Add subplot (dont worry only one plot appears)
 axes.set_autoscale_on(True) # enable autoscale
 axes.autoscale_view(True,True,True)
 
-xd = mtd['0_IvsQ_binned'].dataX(0)[:-1]
-yd = mtd['0_IvsQ_binned'].dataY(0)
-ed = mtd['0_IvsQ_binned'].dataE(0)
-
-plt.ion()
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.errorbar(xd, yd, ed)
-
-
-while True:
-    # Generate figure
+try:
     xd = mtd['0_IvsQ_binned'].dataX(0)[:-1]
     yd = mtd['0_IvsQ_binned'].dataY(0)
     ed = mtd['0_IvsQ_binned'].dataE(0)
 
-    xarray = np.array(xd)
-    yarray = np.array(yd)
-    earray = np.array(ed)
+    plt.ion()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.errorbar(xd, yd, ed)
+except KeyError:
+    pass
 
-    data = np.column_stack([xarray, yarray, earray])
-    datafile_path = "text.csv"
-    np.savetxt(datafile_path, data, fmt=['%.10e', '%.10e', '%.10e'])
-    # line1.set_ydata(yd)
-    fig.canvas.draw()
-    fig.canvas.flush_events()
+while True:
+    try:
+        # Generate figure
+        xd = mtd['0_IvsQ_binned'].dataX(0)[:-1]
+        yd = mtd['0_IvsQ_binned'].dataY(0)
+        ed = mtd['0_IvsQ_binned'].dataE(0)
+
+        xarray = np.array(xd)
+        yarray = np.array(yd)
+        earray = np.array(ed)
+
+        data = np.column_stack([xarray, yarray, earray])
+        datafile_path = "text.csv"
+        np.savetxt(datafile_path, data, fmt=['%.10e', '%.10e', '%.10e'])
+        # line1.set_ydata(yd)
+        fig.canvas.draw()
+        fig.canvas.flush_events()
+    except KeyError:
+        pass
+    time.sleep(10)
+    SaveNexus(InputWorkspace='dae', Filename='live-data-fig.nxs')
+    # wksp = mtd['dae']
+    # # wksp = mtd[str(run)]
+    # z = wksp.extractY()
+    # plotly_fig_2 = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
+    #
+    # plotly_fig_2.write_image("live-data-fig.png")
 
 
 

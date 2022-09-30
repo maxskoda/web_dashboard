@@ -7,7 +7,9 @@ from mantid.simpleapi import *
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import numpy as np
-from CaChannel import CaChannel, ca  # CaChannelException, ca
+# from CaChannel import CaChannel, ca  # CaChannelException, ca
+
+from skimage import io
 
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
@@ -330,15 +332,24 @@ def graph_row(value, n_int): #trans1_value, trans2_value,
               Input('runlist-dropdown-2', 'value'))
 def graph_row_2_live(run):
     try:
-        wksp = mtd[str(run)]
+        Load(Filename='live-data-fig.nxs', OutputWorkspace='dae')
+        wksp = mtd['dae']
         z = wksp.extractY()
     except KeyError:
         wksp = Load(str(run), OutputWorkspace=str(run))
         z = wksp.extractY()
 
-    plotly_fig_2 = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
+    # img = io.imread('live-data-fig.png')
+    plotly_fig_2 = px.imshow(np.log(z),
+                             aspect='auto', origin='lower', color_continuous_scale='rainbow',
+                             title="Live Detector Image", labels={'x': "TOF channel", 'y': "Spectrum"}
+                             )
+    # plotly_fig_2 = px.imshow(img, aspect='auto', origin='lower', color_continuous_scale='rainbow')
 
-    gr = dcc.Graph(id='detector-image-graph', figure=plotly_fig_2, style={'width': '70vh', 'height': '60vh'})
+    # plotly_fig_2.write_image("live-data-fig.png")
+
+    gr = dcc.Graph(id='live-detector-image-graph', figure=plotly_fig_2, style={'width': '70vh', 'height': '60vh'})
+
     return gr
 
 @app.callback(Output('graph_row_2', 'children'),
@@ -352,9 +363,12 @@ def graph_row_2(run):
         wksp = Load(str(run), OutputWorkspace=str(run))
         z = wksp.extractY()
 
-    plotly_fig_2 = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
+    plotly_fig_3 = px.imshow(np.log(z),
+                             aspect='auto', origin='lower', color_continuous_scale='rainbow',
+                             title="Run "+str(run), labels={'x': "TOF channel", 'y': "Spectrum"}
+                             )
 
-    gr = dcc.Graph(id='detector-image-graph', figure=plotly_fig_2, style={'width': '70vh', 'height': '60vh'})
+    gr = dcc.Graph(id='detector-image-graph', figure=plotly_fig_3, style={'width': '70vh', 'height': '60vh'})
     return gr
 
 
@@ -375,11 +389,11 @@ app.layout = html.Div([
                 # selected_style={'padding': '0', 'line-height': '5vh'}),
         dcc.Tab(label='Detector image', id='tab-2-graph', children=[ #value='tab-2-graph',
             dbc.Row([
-                dbc.Col(html.Div(id='graph_row_2_live'), md=5),
+                dbc.Col(html.Div(id='graph_row_2_live'), md=5, width={"offset": 1}),
                 dbc.Col(html.Div(id='graph_row_2'), md=5),
                 dbc.Col(html.Div(dcc.Dropdown(id='runlist-dropdown-2', placeholder="Select runs - hover for title",
                                               multi=False, style={'font-size': '15px'}),
-                                 className="dash-bootstrap"), md=2),
+                                 className="dash-bootstrap"), md=1),
             ]),
         ]),
         #style={'font-size': '15px', 'line-height': '5vh', 'padding': '0'}),
