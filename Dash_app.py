@@ -3,7 +3,7 @@ import base64
 import json
 
 from dash.exceptions import PreventUpdate
-from mantid.simpleapi import *
+# from mantid.simpleapi import *
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import numpy as np
@@ -205,9 +205,9 @@ fig = go.Figure(data=[go.Scatter(x=xd, y=yd, error_y=dict(
     visible=True))])
 
 # Detector image
-wksp = LoadISISNexus('INTER00066223')
-z = wksp.extractY()
-plotly_fig = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
+# wksp = LoadISISNexus('INTER00066223')
+# z = wksp.extractY()
+# plotly_fig = px.imshow(np.log(z), aspect='auto', origin='lower', color_continuous_scale='rainbow')
 
 perangle = [['0.8', '', '66475', '66476', '70-90', '', '0.08', '', '', '70-90', '20-60'],
             ['2.3', '', '66746', '66747', '70-90', '', '', '', '', '70-95', '140-150']]
@@ -467,23 +467,24 @@ def on_data_upload(contents, filename):
 
 
 def get_runs(cycle):
-    try:
-        ISISJournalGetExperimentRuns(Cycle=cycle, InvestigationId=str(values['_RBNUMBER.VAL'].strip()),
-                                 OutputWorkspace='RB' + str(values['_RBNUMBER.VAL'].strip()))
-        runs = mtd['RB' + str(values['_RBNUMBER.VAL'].strip())]
-    except ValueError:
-        rbno = "2210267" #input("Please enter a valid RB number:")
-        ISISJournalGetExperimentRuns(Cycle=cycle, InvestigationId=str(rbno),
-                                     OutputWorkspace='RB' + str(rbno))
-        runs = mtd['RB' + str(rbno)]
+    pass
+    # try:
+    #     ISISJournalGetExperimentRuns(Cycle=cycle, InvestigationId=str(values['_RBNUMBER.VAL'].strip()),
+    #                              OutputWorkspace='RB' + str(values['_RBNUMBER.VAL'].strip()))
+    #     runs = mtd['RB' + str(values['_RBNUMBER.VAL'].strip())]
+    # except ValueError:
+    #     rbno = "2210267" #input("Please enter a valid RB number:")
+    #     ISISJournalGetExperimentRuns(Cycle=cycle, InvestigationId=str(rbno),
+    #                                  OutputWorkspace='RB' + str(rbno))
+    #     runs = mtd['RB' + str(rbno)]
+    #
+    # opt = [item for item in runs.column(1)]
+    # titles = [item for item in runs.column(2)]
+    # print(opt)
+    # return opt, titles
 
-    opt = [item for item in runs.column(1)]
-    titles = [item for item in runs.column(2)]
-    print(opt)
-    return opt, titles
 
-
-opt, titles = get_runs(cycle)
+# opt, titles = get_runs(cycle)
 
 
 @app.callback(
